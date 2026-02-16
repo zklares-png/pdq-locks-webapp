@@ -1,0 +1,13 @@
+{
+  "name": "pdq-locks-webapp",
+  "version": "1.0.0",
+  "description": "Web app for PDQ Locks control",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.0"
+  }
+}

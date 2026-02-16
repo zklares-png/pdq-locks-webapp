@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDQ Locks Control</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    
+    .subtitle {
+      color: #666;
+      margin-bottom: 20px;
+    }
+    
+    .nav-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+    }
+    
+    .nav-tab {
+      padding: 10px 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      color: #666;
+      border-radius: 8px;
+    }
+    
+    .nav-tab:hover {
+      background: #e5e5e5;
+    }
+    
+    .nav-tab.active {
+      background: #0066cc;
+      color: white;
+    }
+    
+    .locks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    
+    .lock-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .lock-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 15px;
+    }
+    
+    .lock-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .lock-location {
+      font-size: 12px;
+      color: #888;
+      margin-top: 4px;
+    }
+    
+    .lock-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 15px;
+      padding: 10px;
+      background: #f9f9f9;
+      border-radius: 8px;
+    }
+    
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    
+    .status-dot.locked {
+      background: #22c55e;
+      box-shadow: 0 0 8px #22c55e;
+    }
+    
+    .status-dot.unlocked {
+      background: #ef4444;
+      box-shadow: 0 0 8px #ef4444;
+    }
+    
+    .status-text {
+      color: #333;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .lock-meta {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 15px;
+    }
+    
+    .lock-actions {
+      display: flex;
+      gap: 10px;
+    }
+    
+    button {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn-lock {
+      background: #22c55e;
+      color: white;
+    }
+    
+    .btn-lock:hover {
+      background: #16a34a;
+    }
+    
+    .btn-unlock {
+      background: #ef4444;
+      color: white;
+    }
+    
+    .btn-unlock:hover {
+      background: #dc2626;
+    }
+    
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: #666;
+    }
+    
+    .error {
+      background: #fee2e2;
+      color: #dc2626;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    
+    .success {
+      background: #dcfce7;
+      color: #16a34a;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    
+    .group-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .group-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    
+    .group-locks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    .group-lock-tag {
+      background: #e5e5e5;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      color: #666;
+    }
+    
+    .activity-list {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    
+    .activity-item {
+      padding: 12px 0;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .activity-item:last-child {
+      border-bottom: none;
+    }
+    
+    .activity-type {
+      font-weight: 500;
+      color: #333;
+    }
+    
+    .activity-time {
+      color: #888;
+      font-size: 12px;
+    }
+    
+    #config-banner {
+      background: #fef3c7;
+      color: #92400e;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔒 PDQ Locks Control</h1>
+    <p class="subtitle">Manage your smart locks</p>
+    
+    <div id="config-banner" style="display: none;">
+      ⚠️ API not configured. Set PDQ_API_KEY environment variable.
+    </div>
+    
+    <div id="message"></div>
+    
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showTab('locks')">Locks</button>
+      <button class="nav-tab" onclick="showTab('groups')">Groups</button>
+      <button class="nav-tab" onclick="showTab('activity')">Activity</button>
+    </div>
+    
+    <div id="locks-tab">
+      <div id="locks" class="locks-grid">
+        <div class="loading">Loading locks...</div>
+      </div>
+    </div>
+    
+    <div id="groups-tab" style="display: none;">
+      <div id="groups">
+        <div class="loading">Loading groups...</div>
+      </div>
+    </div>
+    
+    <div id="activity-tab" style="display: none;">
+      <div id="activity">
+        <div class="loading">Loading activity...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = '/api';
+    let currentTab = 'locks';
+    let lockStates = {};
+    
+    // Check API health on load
+    async function checkHealth() {
+      try {
+        const res = await fetch(`${API_BASE}/health`);
+        const data = await res.json();
+        if (!data.apiBase || data.apiBase.includes('your-api')) {
+          document.getElementById('config-banner').style.display = 'block';
+        }
+      } catch (e) {
+        document.getElementById('config-banner').style.display = 'block';
+      }
+    }
+    
+    async function fetchLocks() {
+      try {
+        const response = await fetch(`${API_BASE}/locks`);
+        if (!response.ok) throw new Error('Failed to fetch locks');
+        const locks = await response.json();
+        renderLocks(locks);
+      } catch (error) {
+        showError('Failed to load locks: ' + error.message);
+      }
+    }
+    
+    function renderLocks(locks) {
+      const container = document.getElementById('locks');
+      
+      if (!locks || locks.length === 0) {
+        container.innerHTML = '<div class="loading">No locks found. Add locks in the PDQ Spirit app.</div>';
+        return;
+      }
+      
+      container.innerHTML = locks.map(lock => {
+        // Check if we have a cached state or use default
+        const isLocked = lockStates[lock.mac_address] !== undefined 
+          ? lockStates[lock.mac_address] 
+          : lock.mode === 'locked';
+        
+        return `
+          <div class="lock-card">
+            <div class="lock-header">
+              <div>
+                <div class="lock-name">${lock.nickname || lock.mac_address}</div>
+                <div class="lock-location">${lock.location?.location_name || 'No location'}</div>
+              </div>
+            </div>
+            <div class="lock-status">
+              <span class="status-dot ${isLocked ? 'locked' : 'unlocked'}"></span>
+              <span class="status-text">${isLocked ? '🔒 Locked' : '🔓 Unlocked'}</span>
+            </div>
+            <div class="lock-meta">
+              MAC: ${lock.mac_address}
+            </div>
+            <div class="lock-actions">
+              <button class="btn-lock" onclick="controlLock('${lock.mac_address}', 'lock')" ${isLocked ? 'disabled' : ''}>
+                🔒 Lock
+              </button>
+              <button class="btn-unlock" onclick="controlLock('${lock.mac_address}', 'unlock')" ${!isLocked ? 'disabled' : ''}>
+                🔓 Unlock
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    async function controlLock(lockMac, action) {
+      showMessage('');
+      const isLocking = action === 'lock';
+      
+      try {
+        const response = await fetch(`${API_BASE}/locks/${lockMac}/state`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ locked: isLocking })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to ${action} door`);
+        }
+        
+        // Update local state immediately for better UX
+        lockStates[lockMac] = isLocking;
+        
+        showMessage(`Door ${isLocking ? 'locked' : 'unlocked'} successfully!`, 'success');
+        
+        // Refresh locks to get actual state
+        await fetchLocks();
+      } catch (error) {
+        showError(`Failed to ${action} door: ${error.message}`);
+      }
+    }
+    
+    async function fetchGroups() {
+      try {
+        const response = await fetch(`${API_BASE}/groups`);
+        const groups = await response.json();
+        renderGroups(groups);
+      } catch (error) {
+        document.getElementById('groups').innerHTML = 
+          `<div class="error">Failed to load groups: ${error.message}</div>`;
+      }
+    }
+    
+    function renderGroups(groups) {
+      const container = document.getElementById('groups');
+      
+      if (!groups || groups.length === 0) {
+        container.innerHTML = '<div class="loading">No lock groups found.</div>';
+        return;
+      }
+      
+      container.innerHTML = groups.map(group => `
+        <div class="group-card">
+          <div class="group-name">${group.name || `Group ${group.id}`}</div>
+          <div class="group-locks">
+            ${(group.locks || []).map(lock => 
+              `<span class="group-lock-tag">${lock.nickname || lock.mac_address}</span>`
+            ).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    async function fetchActivity() {
+      try {
+        // Get activity for first lock or show message
+        const locksRes = await fetch(`${API_BASE}/locks`);
+        const locks = await locksRes.json();
+        
+        if (!locks || locks.length === 0) {
+          document.getElementById('activity').innerHTML = '<div class="loading">No locks to show activity for.</div>';
+          return;
+        }
+        
+        // Get activity for each lock
+        let allActivity = [];
+        for (const lock of locks.slice(0, 3)) {
+          try {
+            const actRes = await fetch(`${API_BASE}/locks/${lock.mac_address}/activity?per_page=5`);
+            if (actRes.ok) {
+              const activity = await actRes.json();
+              allActivity = [...allActivity, ...activity.map(a => ({...a, lockName: lock.nickname}))];
+            }
+          } catch (e) {}
+        }
+        
+        // Sort by time and limit
+        allActivity.sort((a, b) => new Date(b.occurred_at) - new Date(a.occurred_at));
+        allActivity = allActivity.slice(0, 20);
+        
+        renderActivity(allActivity);
+      } catch (error) {
+        document.getElementById('activity').innerHTML = 
+          `<div class="error">Failed to load activity: ${error.message}</div>`;
+      }
+    }
+    
+    function renderActivity(activity) {
+      const container = document.getElementById('activity');
+      
+      if (!activity || activity.length === 0) {
+        container.innerHTML = '<div class="loading">No recent activity.</div>';
+        return;
+      }
+      
+      const typeLabels = {
+        'lock_operation': '🔒 Locked/Unlocked',
+        'door_operation': '🚪 Door opened',
+        'user_access': '👤 Access granted',
+        'pin_code': '🔢 PIN code used',
+        'card': '💳 Card used'
+      };
+      
+      container.innerHTML = `
+        <div class="activity-list">
+          ${activity.map(item => `
+            <div class="activity-item">
+              <span class="activity-type">${typeLabels[item.type] || item.type || 'Activity'}</span>
+              <span class="activity-time">${item.lockName || ''} - ${new Date(item.occurred_at).toLocaleString()}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+    
+    function showTab(tab) {
+      currentTab = tab;
+      
+      // Update tab buttons
+      document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      // Show/hide content
+      document.getElementById('locks-tab').style.display = tab === 'locks' ? 'block' : 'none';
+      document.getElementById('groups-tab').style.display = tab === 'groups' ? 'block' : 'none';
+      document.getElementById('activity-tab').style.display = tab === 'activity' ? 'block' : 'none';
+      
+      // Load data if needed
+      if (tab === 'locks') fetchLocks();
+      if (tab === 'groups') fetchGroups();
+      if (tab === 'activity') fetchActivity();
+    }
+    
+    function showError(message) {
+      const msgDiv = document.getElementById('message');
+      msgDiv.innerHTML = `<div class="error">${message}</div>`;
+    }
+    
+    function showMessage(message, type = 'success') {
+      const msgDiv = document.getElementById('message');
+      msgDiv.innerHTML = `<div class="${type}">${message}</div>`;
+      setTimeout(() => msgDiv.innerHTML = '', 3000);
+    }
+    
+    // Initialize
+    checkHealth();
+    fetchLocks();
+  </script>
+</body>
+</html>
